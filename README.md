@@ -1,17 +1,17 @@
-# Quick Start
+refreshjs
+=========
+
+refreshjs is a small tool which refresh the browser automatically when watched files change.
 
 
-#### Start the watcher and web server
+Quick Start
+-----------
+Start the watcher and web server
 
     $ refreshjs --watch static
 
-
-#### include the refresh.js to your html files
+include the refresh.js to your html files
 
     <script type='text/javascript' defer='true' src='http://localhost:1127/refresh.js'></script>
 
-
-#### Open your browser and save some files to see what happened!
-
-
-** Feel free to send Pull Request to improve this small tool **
+Done!
