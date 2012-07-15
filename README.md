@@ -1,11 +1,14 @@
 # USAGE
 
 
-## Start the watcher and web server
+1. Start the watcher and web server
 
     $ refreshjs -watch /dir1 /dir2 -port 1127 -host localhost
 
 
-## include the refresh.js to your html files
+2. include the refresh.js to your html files
 
-    <script type='text/javascript' src='http://localhost:1127/refresh.js'></script>
+    <script type='text/javascript' defer='true' src='http://localhost:1127/refresh.js'></script>
+
+
+3. Open your browser and save some files to see what happened!
