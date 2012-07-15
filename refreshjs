@@ -7,25 +7,89 @@ var url  = require('url');
 var events = require('events');
 var util = require('util');
 
+var USAGE = "USAGE: refreshjs --watch /dir1 /dir2 --port 1117";
+var VERSION = "0.1a"
 
-// TODO: using optparse to parse params
-var dir  = path.dirname(fs.realpathSync(__filename))
-var port = 1127
+function parseOpts(switches){
+  var opts = {};
+  var _switch;
+
+  var _switches = {};
+
+  for( var variable in switches ){
+    if( switches.hasOwnProperty(variable) ){
+      var variable_switches = switches[variable];
+      variable_switches.forEach(function(val){
+        _switches[val] = variable;
+      })
+    }
+  }
+
+  process.argv.forEach(function(val, index, array){
+    if( _switches[val] !== undefined ){
+      _switch = val;
+      opts[_switches[_switch]] = [];
+      return;
+    }
+
+    if( _switch ){
+      var variable = _switches[_switch];
+      opts[variable].push(val);
+    }// no switch is open
+  });
+  return opts;
+}
+
+var opts = parseOpts({
+  'watch': ['--watch', '-w'],
+  'port': ['--port', '-p'],
+  'version': ['--version', '-v'],
+  'help': ['--help', '-h']
+});
+
+if( opts.version ){
+  console.log("VERSION ", VERSION);
+  process.exit(0);
+}
+
+if( opts.help ){
+  console.log(USAGE);
+  process.exit(0);
+}
+
+var port = opts.port ? opts.port[0] : 1127
+var watched_dirs = opts.watch ? opts.watch : ['.']
 
 // The eventer class
 Eventer = function(){
   events.EventEmitter.call(this);
 }
-util.inherits(Eventer, events.EventEmitter);
 
+util.inherits(Eventer, events.EventEmitter);
 var eventer = new Eventer();
 
+watched_dirs.forEach(function(dir){
+  // get real path
+  try{
+    dir  = fs.realpathSync(dir);
+  }catch(e){
+    console.error(e.message);
+    process.exit(1);
+  }
 
-// watch dirs and emit 'refresh' when watched dir changed
-function refresh(event, filename){
-  eventer.emit('refresh');
-}
-fs.watch(dir, refresh)
+  // watch dirs and emit 'refresh' when watched dir changed
+  function refresh(event, filename){
+    eventer.emit('refresh');
+    if( filename ){
+      console.log(filename, event);
+    }else{
+      console.log(event);
+    }
+  }
+
+  console.log('Watching ', dir)
+  fs.watch(dir, refresh)
+})
 
 
 // Start the http server which serve the refresh.js file
@@ -34,9 +98,9 @@ fs.watch(dir, refresh)
 http.createServer(function(request, response){
 
   var pathname = url.parse(request.url).pathname;
+  console.log('request', pathname)
 
   // return refresh.js file
-
   if( pathname === '/refresh.js' ){
 
     fs.readFile('refresh.js', function(err, data){
@@ -69,4 +133,4 @@ http.createServer(function(request, response){
 
 }).listen(port);
 
-console.log('Server is running ...')
+console.log('Server is running on port ' + port + ' ...')
