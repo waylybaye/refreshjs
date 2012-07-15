@@ -1,13 +1,60 @@
 #!/usr/bin/env node
 
+var http = require('http')
 var path = require('path')
 var fs   = require('fs');
+var url  = require('url');
+var events = require('events');
+var util = require('util');
 
 
-var dir = path.dirname(fs.realpathSync(__filename))
+// TODO: using optparse to parse params
+var dir  = path.dirname(fs.realpathSync(__filename))
+var port = 1127
+
+function Eventer(){
+  events.EventEmitter.call(this);
+}
+util.inherits(Eventer, events.EventEmitter);
+
+var eventer = new Eventer();
 
 function refresh(event, filename){
-  console.log('refresh', event);
+  console.log('watcher:', event, filename);
+  eventer.emit('refresh');
 }
 
 fs.watch(dir, refresh)
+
+http.createServer(function(request, response){
+
+  var pathname = url.parse(request.url).pathname;
+
+  // return refresh.js file
+
+  if( pathname === '/refresh.js' ){
+    fs.readFile('refresh.js', function(err, data){
+      if (err) throw err;
+
+      response.writeHead(200, {'Content-Type': 'text/javascript'});
+      response.write(data);
+      response.end();
+    });
+  }
+
+  // Long polling view, call through jsonp
+  // only return when watched dir changed
+
+  if( pathname === '/poll' ){
+    var callback = url.parse(request.url, true).query.callback;
+    eventer.once('refresh', function(){
+      response.writeHead(200, {'Content-Type': 'text/javascript'});
+      var json = JSON.stringify({changed: true})
+      response.write(callback + "(" + json + ")");
+      response.end();
+    });
+  }
+
+}).listen(port);
+
+console.log('Server is running ...')
