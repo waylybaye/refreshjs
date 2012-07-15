@@ -93,15 +93,11 @@ watched_dirs.forEach(function(dir){
 // and long polling server
 
 http.createServer(function(request, response){
-
   var pathname = url.parse(request.url).pathname;
-  console.log('request', pathname)
 
   // return refresh.js file
   if( pathname === '/refresh.js' ){
-
     fs.readFile('refresh.js', function(err, data){
-
       // ----- oh, no
       if (err) throw err;
 
