@@ -1,7 +1,7 @@
 refreshjs
 =========
 
-refreshjs is a small tool which refresh the browser automatically when watched files changeed.
+refreshjs is a small tool which refresh the browser automatically when watched files changed.
 
 
 Quick Start
