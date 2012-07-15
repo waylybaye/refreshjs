@@ -11,6 +11,7 @@ var USAGE = "USAGE: refreshjs --watch /dir1 /dir2 --port 1117";
 var VERSION = "0.1a"
 
 function parseOpts(switches){
+  // Parse options from command line argv
   var opts = {};
   var _switch;
 
@@ -35,11 +36,19 @@ function parseOpts(switches){
     if( _switch ){
       var variable = _switches[_switch];
       opts[variable].push(val);
-    }// no switch is open
+    }
   });
   return opts;
 }
 
+// The eventer class
+Eventer = function(){
+  events.EventEmitter.call(this);
+}
+util.inherits(Eventer, events.EventEmitter);
+
+
+// Parse the options
 var opts = parseOpts({
   'watch': ['--watch', '-w'],
   'port': ['--port', '-p'],
@@ -57,19 +66,12 @@ if( opts.help ){
   process.exit(0);
 }
 
-var port = opts.port ? opts.port[0] : 1127
+var port = opts.port ? opts.port[0] : 1117
 var watched_dirs = opts.watch ? opts.watch : ['.']
-
-// The eventer class
-Eventer = function(){
-  events.EventEmitter.call(this);
-}
-
-util.inherits(Eventer, events.EventEmitter);
 var eventer = new Eventer();
 
 watched_dirs.forEach(function(dir){
-  // get real path
+  // convert '.' '../' to real path
   try{
     dir  = fs.realpathSync(dir);
   }catch(e){
@@ -80,15 +82,10 @@ watched_dirs.forEach(function(dir){
   // watch dirs and emit 'refresh' when watched dir changed
   function refresh(event, filename){
     eventer.emit('refresh');
-    if( filename ){
-      console.log(filename, event);
-    }else{
-      console.log(event);
-    }
   }
 
-  console.log('Watching ', dir)
   fs.watch(dir, refresh)
+  console.log('Watching ', dir)
 })
 
 
