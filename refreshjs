@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+
+var path = require('path')
+var fs   = require('fs');
+
+
+var dir = path.dirname(fs.realpathSync(__filename))
+
+function refresh(event, filename){
+  console.log('refresh', event);
+}
+
+fs.watch(dir, refresh)
