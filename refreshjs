@@ -12,19 +12,24 @@ var util = require('util');
 var dir  = path.dirname(fs.realpathSync(__filename))
 var port = 1127
 
-function Eventer(){
+// The eventer class
+Eventer = function(){
   events.EventEmitter.call(this);
 }
 util.inherits(Eventer, events.EventEmitter);
 
 var eventer = new Eventer();
 
+
+// watch dirs and emit 'refresh' when watched dir changed
 function refresh(event, filename){
-  console.log('watcher:', event, filename);
   eventer.emit('refresh');
 }
-
 fs.watch(dir, refresh)
+
+
+// Start the http server which serve the refresh.js file
+// and long polling server
 
 http.createServer(function(request, response){
 
@@ -33,14 +38,21 @@ http.createServer(function(request, response){
   // return refresh.js file
 
   if( pathname === '/refresh.js' ){
+
     fs.readFile('refresh.js', function(err, data){
+
+      // ----- oh, no
       if (err) throw err;
+
+      // parse the {{ port }} variable
+      data = data.toString().replace(/\{\{\s*port\s*\}\}/g, port);
 
       response.writeHead(200, {'Content-Type': 'text/javascript'});
       response.write(data);
       response.end();
     });
   }
+
 
   // Long polling view, call through jsonp
   // only return when watched dir changed
