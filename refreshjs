@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
-var http = require('http')
-var path = require('path')
-var fs   = require('fs');
-var url  = require('url');
+var http   = require('http');
+var path   = require('path');
+var fs     = require('fs');
+var url    = require('url');
 var events = require('events');
-var util = require('util');
+var util   = require('util');
 
 var USAGE = "USAGE: refreshjs --watch /dir1 /dir2 --port 1117";
-var VERSION = "0.1a"
+var VERSION = "0.1a";
 
 function parseOpts(switches){
   // Parse options from command line argv
@@ -22,7 +22,7 @@ function parseOpts(switches){
       var variable_switches = switches[variable];
       variable_switches.forEach(function(val){
         _switches[val] = variable;
-      })
+      });
     }
   }
 
@@ -44,7 +44,7 @@ function parseOpts(switches){
 // The eventer class
 Eventer = function(){
   events.EventEmitter.call(this);
-}
+};
 util.inherits(Eventer, events.EventEmitter);
 
 
@@ -66,8 +66,8 @@ if( opts.help ){
   process.exit(0);
 }
 
-var port = opts.port ? opts.port[0] : 1117
-var watched_dirs = opts.watch ? opts.watch : ['.']
+var port = opts.port ? opts.port[0] : 1117;
+var watched_dirs = opts.watch ? opts.watch : ['.'];
 var eventer = new Eventer();
 
 watched_dirs.forEach(function(dir){
@@ -84,9 +84,9 @@ watched_dirs.forEach(function(dir){
     eventer.emit('refresh');
   }
 
-  fs.watch(dir, refresh)
-  console.log('Watching ', dir)
-})
+  fs.watch(dir, refresh);
+  console.log('Watching ', dir);
+});
 
 
 // Start the http server which serve the refresh.js file
@@ -97,7 +97,10 @@ http.createServer(function(request, response){
 
   // return refresh.js file
   if( pathname === '/refresh.js' ){
-    fs.readFile('refresh.js', function(err, data){
+    var dirname = path.dirname(__filename);
+    var file_path = fs.realpathSync(path.join(dirname, 'refresh.js'));
+
+    fs.readFile(file_path, function(err, data){
       // ----- oh, no
       if (err) throw err;
 
@@ -118,7 +121,7 @@ http.createServer(function(request, response){
     var callback = url.parse(request.url, true).query.callback;
     eventer.once('refresh', function(){
       response.writeHead(200, {'Content-Type': 'text/javascript'});
-      var json = JSON.stringify({changed: true})
+      var json = JSON.stringify({changed: true});
       response.write(callback + "(" + json + ")");
       response.end();
     });
@@ -126,4 +129,4 @@ http.createServer(function(request, response){
 
 }).listen(port);
 
-console.log('Server is running on port ' + port + ' ...')
+console.log('Server is running on port ' + port + ' ...');
