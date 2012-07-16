@@ -69,25 +69,56 @@ if( opts.help ){
 var port = opts.port ? opts.port[0] : 1117;
 var watched_dirs = opts.watch ? opts.watch : ['.'];
 var eventer = new Eventer();
+var watched_files = [];
 
-watched_dirs.forEach(function(dir){
-  // convert '.' '../' to real path
+hidden = function(file) {
+  return /^\.|~$/.test(file);
+};
+
+watch = function(file_path, emit_refresh){
   try{
-    dir  = fs.realpathSync(dir);
+    file_path  = fs.realpathSync(file_path);
   }catch(e){
     console.error(e.message);
     process.exit(1);
   }
-
-  // watch dirs and emit 'refresh' when watched dir changed
-  function refresh(event, filename){
-    eventer.emit('refresh');
+  if( hidden(file_path) ){
+    return;
   }
 
-  fs.watch(dir, refresh);
-  console.log('Watching ', dir);
+  fs.stat(file_path, function(err, stats){
+    if( stats.isDirectory() ){
+      fs.readdir(file_path, function(err, files){
+        files.forEach(function(file){
+          watch(path.join(file_path, file));
+        });
+      });
+
+      fs.watch(file_path, function(event, filename){
+        /// looking for new files
+        watch(file_path, true);
+      });
+
+    }else{
+      if( watched_files.indexOf(file_path) === -1 ){
+        fs.watchFile(file_path, function(){
+          eventer.emit('refresh');
+        });
+        watched_files.push(file_path);
+        if( emit_refresh ){
+          eventer.emit('refresh');
+        }
+      }
+    }
+  });
+};
+
+watched_dirs.forEach(function(dir){
+  watch(dir);
+  console.log('Watching ', fs.realpathSync(dir));
 });
 
+eventer.on('refresh', function(){console.log('refresh');});
 
 // Start the http server which serve the refresh.js file
 // and long polling server
