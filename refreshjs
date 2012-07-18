@@ -10,6 +10,11 @@ var util   = require('util');
 var USAGE = "USAGE: refreshjs --watch /dir1 /dir2 --port 1117";
 var VERSION = "0.1a";
 
+var red, blue, reset;
+red   = '\033[31m';
+blue  = '\033[34m';
+reset = '\033[0m';
+
 function parseOpts(switches){
   // Parse options from command line argv
   var opts = {};
@@ -50,10 +55,10 @@ util.inherits(Eventer, events.EventEmitter);
 
 // Parse the options
 var opts = parseOpts({
-  'watch': ['--watch', '-w'],
-  'port': ['--port', '-p'],
+  'watch'  : ['--watch', '-w'],
+  'port'   : ['--port', '-p'],
   'version': ['--version', '-v'],
-  'help': ['--help', '-h']
+  'help'   : ['--help', '-h']
 });
 
 if( opts.version ){
@@ -115,7 +120,7 @@ watch = function(file_path, emit_refresh){
 
 watched_dirs.forEach(function(dir){
   watch(dir);
-  console.log('Watching ', fs.realpathSync(dir));
+  console.log(blue + 'Watching ', fs.realpathSync(dir) + reset);
 });
 
 eventer.on('refresh', function(){console.log('refresh');});
@@ -160,4 +165,5 @@ http.createServer(function(request, response){
 
 }).listen(port);
 
-console.log('Server is running on port ' + port + ' ...');
+console.log('add below code to your html file');
+console.log(red + "<script src='//localhost:" + port + "/refresh.js'></script>" + reset);
